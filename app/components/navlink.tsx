@@ -20,7 +20,7 @@ export default function NavLink({
   return (
     <Link
       href={href}
-      className={`py-2 px-4 ${className} ${isActive ? "bg-gray-400" : "hover:bg-gray-600"  }`}
+      className={`py-2 px-4 ${className} ${isActive ? "bg-emerald-400" : "hover:bg-slate-700"  }`}
     >
       {children}
     </Link>

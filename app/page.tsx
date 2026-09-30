@@ -5,6 +5,7 @@ import { LoaderCircle, BanknoteArrowDown } from "lucide-react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { userAtom } from "../lib/auth-store";
 import Button from "./components/button";
+import Slots from "./components/slots";
 
 type Message = {
   text: string;
@@ -16,13 +17,17 @@ export default function Home() {
   const setUser = useSetAtom(userAtom);
 
   const [gambling, setGambling] = useState(false);
+  const [gambleId, setGambleId] = useState(0);
+  const [won, setWon] = useState<boolean | null>(null);
   const [message, setMessage] = useState<Message | null>(null);
 
   async function gamble() {
     if (gambling) return;
 
-    setGambling(true);
+    setWon(null);
     setMessage(null);
+    setGambleId((id) => id + 1);
+    setGambling(true);
 
     try {
       const response = await fetch("/api/gamble", {
@@ -36,12 +41,15 @@ export default function Home() {
           text: data.error ?? "Gamble failed.",
           won: null,
         });
+
+        setGambling(false);
         return;
       }
 
-      // Server has already resolved the gamble.
-      // Wait before revealing the result to the player.
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setWon(data.won);
+
+      // Keep the slots running for 2 seconds.
+      await new Promise((resolve) => setTimeout(resolve, 2500));
 
       setUser((current) =>
         current
@@ -52,17 +60,12 @@ export default function Home() {
           : current
       );
 
-      if (data.won) {
-        setMessage({
-          text: "You won $200!",
-          won: true,
-        });
-      } else {
-        setMessage({
-          text: "You lost $50.",
-          won: false,
-        });
-      }
+      setMessage({
+        text: data.won ? "You won $200!" : "You lost $50.",
+        won: data.won,
+      });
+
+      setGambling(false);
     } finally {
       setGambling(false);
     }
@@ -84,6 +87,12 @@ export default function Home() {
       <p>
         Money: ${user.money}
       </p>
+
+      <Slots
+        key={gambleId}
+        gambling={gambling}
+        won={won}
+      />
 
       <Button
         onClick={gamble}

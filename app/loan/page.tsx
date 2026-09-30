@@ -68,9 +68,14 @@ export default function LoanPage() {
         Current balance: ${user.money}
       </p>
 
-      <p>
-        Out of CASH?? Take a loan and get back to gambling!
-      </p>
+      <div>
+        <p>
+          Gambled all your money away? Just take a loan!
+        </p>
+        <p className="italic text-gray-400">
+          (don't worry, you don't have to pay it back)
+        </p>
+      </div>
 
       <Button
         onClick={takeLoan}
