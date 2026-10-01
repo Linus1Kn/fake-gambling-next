@@ -20,9 +20,17 @@ export default function Home() {
   const [gambleId, setGambleId] = useState(0);
   const [won, setWon] = useState<boolean | null>(null);
   const [message, setMessage] = useState<Message | null>(null);
+  const [bet, setBet] = useState(5)
 
   async function gamble() {
     if (gambling) return;
+    if (bet < 5) {
+      setMessage({
+        text: "Bet must be at least $5",
+        won: null,
+      });
+      return;
+    }
 
     setWon(null);
     setMessage(null);
@@ -30,8 +38,13 @@ export default function Home() {
     setGambling(true);
 
     try {
+      const currentBet = bet
       const response = await fetch("/api/gamble", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ bet }),
       });
 
       const data = await response.json();
@@ -61,7 +74,7 @@ export default function Home() {
       );
 
       setMessage({
-        text: data.won ? "You won $200!" : "You lost $50.",
+        text: data.won ? `You won $${data.prize ?? "?"}!` : `You lost $${currentBet}.`,
         won: data.won,
       });
 
@@ -88,28 +101,48 @@ export default function Home() {
         Money: ${user.money}
       </p>
 
-      <Slots
-        key={gambleId}
-        gambling={gambling}
-        won={won}
-      />
+      <div className="flex flex-col gap-4">
+        <Slots
+          key={gambleId}
+          gambling={gambling}
+          won={won}
+        />
 
-      <Button
-        onClick={gamble}
-        disabled={gambling || user.money < 50}
-      >
-        {gambling ? (
-          <>
-            <LoaderCircle size={24} className="animate-spin" />
-            <span>Spinning...</span>
-          </>
-        ) : (
-          <>
-            <BanknoteArrowDown size={24} />
-            <span>Gamble $50</span>
-          </>
-        )}
-      </Button>
+        <div className="flex flex-col gap-2">
+
+          <div className="flex gap-2 items-center">
+            <p className="font-semibold">Bet: </p>
+            <input
+              type="number"
+              placeholder="$"
+              className="bg-slate-900 p-1 flex-1"
+              value={bet}
+              onChange={(e) => {
+                setBet(Math.floor(Math.min(user.money, Math.max(0, Number(e.target.value)))))
+              }}
+              min={0}
+              max={user.money}
+            />
+          </div>
+
+          <Button
+            onClick={gamble}
+            disabled={gambling || user.money < 50 || (bet < 5)}
+          >
+            {gambling ? (
+              <>
+                <LoaderCircle size={24} className="animate-spin" />
+                <span>Spinning...</span>
+              </>
+            ) : (
+              <>
+                <BanknoteArrowDown size={24} />
+                <span>Gamble ${bet}</span>
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
 
       {message && (
         <p

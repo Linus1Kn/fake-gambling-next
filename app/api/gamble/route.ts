@@ -3,7 +3,7 @@ import crypto from "crypto";
 import db from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 
-export async function POST() {
+export async function POST(request: Request) {
   const user = await getCurrentUser();
 
   if (!user) {
@@ -13,7 +13,17 @@ export async function POST() {
     );
   }
 
-  // Check balance and deduct $50 atomically.
+  const { bet } = await request.json();
+  const amount = Number(bet);
+
+  if (!Number.isFinite(amount) || amount < 5) {
+    return NextResponse.json(
+      { error: "Bet must be at least $5." },
+      { status: 400 }
+    );
+  }
+
+  // Check balance and deduct bet atomically.
   const gamble = db.transaction(() => {
     const currentUser = db
       .prepare(`
@@ -27,29 +37,31 @@ export async function POST() {
       throw new Error("User not found");
     }
 
-    if (currentUser.money < 50) {
+    if (currentUser.money < amount) {
       return {
         success: false,
-        error: "You need at least $50 to gamble.",
+        error: "You don't have enough money for this bet.",
         money: currentUser.money,
       };
     }
 
     db.prepare(`
       UPDATE users
-      SET money = money - 50
+      SET money = money - ?
       WHERE id = ?
-    `).run(user.id);
+    `).run(amount, user.id);
 
     // 25% chance.
     const won = crypto.randomInt(0, 100) < 25;
 
+    const prize = won ? amount * 3 : 0;
+
     if (won) {
       db.prepare(`
         UPDATE users
-        SET money = money + 200
+        SET money = money + ?
         WHERE id = ?
-      `).run(user.id);
+      `).run(prize, user.id);
     }
 
     const updatedUser = db
@@ -63,7 +75,8 @@ export async function POST() {
     return {
       success: true,
       won,
-      prize: won ? 200 : 0,
+      bet: amount,
+      prize,
       money: updatedUser.money,
     };
   })();
