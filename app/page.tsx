@@ -21,6 +21,8 @@ export default function Home() {
   const [won, setWon] = useState<boolean | null>(null);
   const [message, setMessage] = useState<Message | null>(null);
   const [bet, setBet] = useState(0)
+  const [mult, setMult] = useState(2)
+  const multOptions = [2, 3, 5, 10]
 
   const minBet = 1
 
@@ -46,7 +48,7 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ bet }),
+        body: JSON.stringify({ bet, mult }),
       });
 
       const data = await response.json();
@@ -143,6 +145,20 @@ export default function Home() {
               </>
             )}
           </Button>
+
+          <div className="flex gap-2">
+            {multOptions.map((thisMult, i) => (
+              <Button
+                key={i}
+                onClick={() => {setMult(thisMult)}}
+                disabled={thisMult === mult}
+                className="flex-1"
+              >
+                x{thisMult}
+              </Button>
+            ))}
+          </div>
+
         </div>
       </div>
 

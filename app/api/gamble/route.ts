@@ -13,8 +13,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const { bet } = await request.json();
+  const { bet, mult } = await request.json();
+
   const amount = Number(bet);
+  const multiplier = Number(mult);
 
   if (!Number.isFinite(amount) || amount < 1) {
     return NextResponse.json(
@@ -23,7 +25,26 @@ export async function POST(request: Request) {
     );
   }
 
-  // Check balance and deduct bet atomically.
+  // Server-side validation. Never trust the client's multiplier.
+  if (
+    !Number.isFinite(multiplier) ||
+    multiplier < 1 ||
+    multiplier > 10
+  ) {
+    return NextResponse.json(
+      { error: "Multiplier must be between 1 and 10." },
+      { status: 400 }
+    );
+  }
+
+  // Base chance is 25%.
+  // Higher multipliers reduce the chance proportionally.
+  const winChance = 50 / multiplier;
+
+  // Base prize is 3x the bet.
+  // Higher multipliers increase the prize proportionally.
+  const prizeMultiplier = multiplier;
+
   const gamble = db.transaction(() => {
     const currentUser = db
       .prepare(`
@@ -45,16 +66,21 @@ export async function POST(request: Request) {
       };
     }
 
+    // Deduct the bet.
     db.prepare(`
       UPDATE users
       SET money = money - ?
       WHERE id = ?
     `).run(amount, user.id);
 
-    // 25% chance.
-    const won = crypto.randomInt(0, 100) < 25;
+    // Generate a value from 0 to 999999 so fractional
+    // probabilities work accurately.
+    const roll = crypto.randomInt(0, 1_000_000);
+    const won = roll < winChance * 10_000;
 
-    const prize = won ? amount * 3 : 0;
+    const prize = won
+      ? amount * prizeMultiplier
+      : 0;
 
     if (won) {
       db.prepare(`
@@ -76,6 +102,9 @@ export async function POST(request: Request) {
       success: true,
       won,
       bet: amount,
+      mult: multiplier,
+      winChance,
+      prizeMultiplier,
       prize,
       money: updatedUser.money,
     };
