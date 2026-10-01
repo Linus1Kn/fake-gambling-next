@@ -16,9 +16,9 @@ export async function POST(request: Request) {
   const { bet } = await request.json();
   const amount = Number(bet);
 
-  if (!Number.isFinite(amount) || amount < 5) {
+  if (!Number.isFinite(amount) || amount < 1) {
     return NextResponse.json(
-      { error: "Bet must be at least $5." },
+      { error: "Bet must be at least $1." },
       { status: 400 }
     );
   }

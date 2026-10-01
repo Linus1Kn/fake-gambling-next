@@ -20,13 +20,15 @@ export default function Home() {
   const [gambleId, setGambleId] = useState(0);
   const [won, setWon] = useState<boolean | null>(null);
   const [message, setMessage] = useState<Message | null>(null);
-  const [bet, setBet] = useState(5)
+  const [bet, setBet] = useState(0)
+
+  const minBet = 1
 
   async function gamble() {
     if (gambling) return;
-    if (bet < 5) {
+    if (bet < minBet) {
       setMessage({
-        text: "Bet must be at least $5",
+        text: `Bet must be at least $${minBet}`,
         won: null,
       });
       return;
@@ -127,7 +129,7 @@ export default function Home() {
 
           <Button
             onClick={gamble}
-            disabled={gambling || user.money < 50 || (bet < 5)}
+            disabled={gambling || user.money < minBet || (bet < minBet)}
           >
             {gambling ? (
               <>
