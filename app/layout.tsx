@@ -19,7 +19,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Provider>
           <AuthProvider>
             <Navbar />
-            <main className='flex flex-col p-4 items-center'>
+            <main className='flex flex-col items-center p-4 flex-1'>
               {children}
             </main>
           </AuthProvider>

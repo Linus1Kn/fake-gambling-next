@@ -37,11 +37,9 @@ export async function POST(request: Request) {
     );
   }
 
-  // Base chance is 25%.
   // Higher multipliers reduce the chance proportionally.
-  const winChance = 50 / multiplier;
+  const winChance = 80 / multiplier;
 
-  // Base prize is 3x the bet.
   // Higher multipliers increase the prize proportionally.
   const prizeMultiplier = multiplier;
 

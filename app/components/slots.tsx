@@ -138,13 +138,13 @@ export default function Slots({ gambling, won }: SlotsProps) {
   }, [gambling, won]);
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 w-full justify-center">
       {slots.map((icon, index) => (
         <div
           key={index}
           className={`
-            flex h-20 w-20 overflow-hidden items-center justify-center
-            border text-4xl transition-colors duration-200 ease-out
+            flex h-30 w-30 overflow-hidden items-center justify-center
+            border text-5xl transition-colors duration-200 ease-out
             ${
               won && !gambling
                 ? "border-slate-900 bg-slate-900"

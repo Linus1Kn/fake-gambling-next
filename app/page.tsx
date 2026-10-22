@@ -5,6 +5,7 @@ import { LoaderCircle, BanknoteArrowDown } from "lucide-react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { userAtom } from "../lib/auth-store";
 import Button from "./components/button";
+import ButtonVertical from "./components/buttonVertical";
 import Slots from "./components/slots";
 
 type Message = {
@@ -20,7 +21,7 @@ export default function Home() {
   const [gambleId, setGambleId] = useState(0);
   const [won, setWon] = useState<boolean | null>(null);
   const [message, setMessage] = useState<Message | null>(null);
-  const [bet, setBet] = useState(0)
+  const [bet, setBet] = useState(5)
   const [mult, setMult] = useState(2)
   const multOptions = [2, 3, 5, 10]
 
@@ -105,7 +106,7 @@ export default function Home() {
         Money: ${user.money}
       </p>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 min-w-100">
         <Slots
           key={gambleId}
           gambling={gambling}
@@ -122,7 +123,7 @@ export default function Home() {
               className="bg-slate-900 p-1 flex-1"
               value={bet}
               onChange={(e) => {
-                setBet(Math.floor(Math.min(user.money, Math.max(0, Number(e.target.value)))))
+                setBet(Math.floor(Math.min(100000, Math.max(0, Number(e.target.value)))))
               }}
               min={0}
               max={user.money}
@@ -131,16 +132,17 @@ export default function Home() {
 
           <Button
             onClick={gamble}
-            disabled={gambling || user.money < minBet || (bet < minBet)}
+            disabled={gambling || user.money < minBet || (bet > user.money) || (bet < minBet)}
+            className="text-2xl"
           >
             {gambling ? (
               <>
-                <LoaderCircle size={24} className="animate-spin" />
+                <LoaderCircle size={28} className="animate-spin" />
                 <span>Spinning...</span>
               </>
             ) : (
               <>
-                <BanknoteArrowDown size={24} />
+                <BanknoteArrowDown size={28} />
                 <span>Gamble ${bet}</span>
               </>
             )}
@@ -148,14 +150,17 @@ export default function Home() {
 
           <div className="flex gap-2">
             {multOptions.map((thisMult, i) => (
-              <Button
+              <ButtonVertical
                 key={i}
-                onClick={() => {setMult(thisMult)}}
+                onClick={() => setMult(thisMult)}
                 disabled={thisMult === mult}
-                className="flex-1"
+                className="flex-1 basis-0 flex-col"
               >
-                x{thisMult}
-              </Button>
+                <span className="text-2xl font-semibold">x{thisMult}</span>
+                <span className="text-sm">
+                  {Math.round((80 / thisMult) * 100) / 100}%
+                </span>
+              </ButtonVertical>
             ))}
           </div>
 
@@ -164,13 +169,16 @@ export default function Home() {
 
       {message && (
         <p
-          className={
-            message.won === true
+          className={`
+            w-full text-center text-2xl 
+            ${
+              message.won === true
               ? "text-emerald-500 font-semibold"
               : message.won === false
                 ? "text-yellow-500"
                 : ""
-          }
+            }
+          `}
         >
           {message.text}
         </p>
